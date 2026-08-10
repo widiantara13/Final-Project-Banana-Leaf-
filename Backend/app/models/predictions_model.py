@@ -2,6 +2,7 @@
 from app.database.database import Base
 from sqlalchemy import (
     BigInteger,
+    Integer,
     String,
     Float,
     DateTime,
@@ -41,7 +42,7 @@ class Predictions(Base):
         nullable = False,
         index = True)
     leaf_condidition_id : Mapped[int] = mapped_column(
-        BigInteger,
+        Integer,
         ForeignKey("leaf_condition.id"),
         nullable = False,
         index = True)

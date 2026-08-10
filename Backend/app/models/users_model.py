@@ -38,6 +38,9 @@ class Users(Base):
         unique = True,
         index = True,
         nullable = False)
+    hashpassword: Mapped[str] = mapped_column(
+        String(255),
+        nullable = False)    
     role : Mapped[UserRole]= mapped_column(
         Enum(UserRole),
         nullable = False,

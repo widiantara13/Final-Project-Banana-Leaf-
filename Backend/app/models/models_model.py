@@ -18,7 +18,7 @@ class Models(Base):
         Integer, 
         primary_key = True,
         index = True,
-        auto_increment = True)
+        autoincrement = True)
     id_owner: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("users.id"),
@@ -34,7 +34,7 @@ class Models(Base):
         nullable = False)
     is_active : Mapped[bool] = mapped_column(
         Boolean,
-        default_value = True
+        default = True
     )
 
     # Membuat relasi antara model Models dan Users

@@ -1,6 +1,7 @@
 # ==================
 # Python
 # ==================
+"Training Model"/myvenv
 Backend/venv/
 __pycache__/
 *.pyc
