@@ -10,3 +10,6 @@ __pycache__/
 
 # Environment
 Backend/.env
+
+# Static
+Backend/app/static
