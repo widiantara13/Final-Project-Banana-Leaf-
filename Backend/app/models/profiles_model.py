@@ -22,15 +22,15 @@ class Profiles(Base):
         autoincrement = True)
     full_name : Mapped[str] = mapped_column(
         String(50),
-        nullable = False,
+        nullable = True,
         index = True)
     address : Mapped[str] = mapped_column(
         String(50),
-        nullable = False,
+        nullable = True,
         index = True)
     phone_number : Mapped[str] = mapped_column(
         String(20),
-        nullable = False,
+        nullable = True,
         index = True)
     created_at : Mapped[datetime]= mapped_column(
         DateTime(timezone = True),
@@ -41,8 +41,8 @@ class Profiles(Base):
         onupdate = func.now())
     avatar : Mapped[str] = mapped_column(
         String(255),
-        nullable = False,
-        default = ""
+        nullable = True,
+        default = "app/static/profile_images/default_avatar.jpg"
     )
     user_id : Mapped[int] = mapped_column(
         BigInteger,

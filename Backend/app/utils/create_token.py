@@ -10,7 +10,7 @@ secret = os.getenv("SESS_TOKEN")
 algoritma = os.getenv("HASH_ALGORITMA")
 
 def create_access_token(data: Token):
-    payload = {"email":data.email, "uuid": data.uuid}
+    payload = {"sub": data.email, "email": data.email, "uuid": data.uuid}
     expire = datetime.now(timezone.utc) + data.expire_delta
     payload.update({"exp": expire})
     return jwt.encode(payload, secret, algoritma)
