@@ -1,7 +1,8 @@
 #Import dependensi yang diperlukan
-from sqlalchemy import create_engine
+
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from dotenv import load_dotenv, find_dotenv
 import os
 
@@ -13,20 +14,16 @@ load_dotenv(find_dotenv())
 sqlalchemy_database_url = os.getenv("DATABASE_URL")
 
 # Membuat engine sqlalchemy
-engine = create_engine(sqlalchemy_database_url)
+engine = create_async_engine(sqlalchemy_database_url)
 
 # Membuat session
-session_local = sessionmaker(autocommit = False, autoflush = False, bind = engine)
+async_session = sessionmaker(engine, expire_on_commit = False, class_ = AsyncSession)
 
 # Membuat base model
 Base = declarative_base()
 
 # Fungsi untuk mendapatkan session database
-def get_db():
-    db = session_local()
-    try:
+async def get_db() -> AsyncSession:
+    async with async_session() as db:
         yield db
-    finally:
-        db.close()
-        
 

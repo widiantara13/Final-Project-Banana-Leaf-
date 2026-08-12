@@ -5,10 +5,10 @@ from pydantic import (
     Field,
     model_validator
 )
-
-#Schema autentiksasi
-class Autentication (BaseModel):
+class Email(BaseModel):
     email: EmailStr = Field(min_length = 8, max_length = 40)
+#Schema autentiksasi
+class Autentication (Email):
     password: str = Field(min_length = 8, max_length = 60)
 
 #Schema register

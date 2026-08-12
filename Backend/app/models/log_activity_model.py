@@ -48,7 +48,7 @@ class LogActivity(Base):
         nullable = False
     )
     browser : Mapped[str] = mapped_column(
-        String(20),
+        String(50),
         nullable = False
     )
     # Membuat relasi antara model LogActivity dan Users
