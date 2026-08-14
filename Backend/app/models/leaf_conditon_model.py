@@ -17,11 +17,7 @@ class LeafCondition(Base):
         Integer,
         primary_key = True,
         index = True,
-        autoincrement = True)
-    id_models: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("models.id"),
-        index = True)
+        autoincrement = True)    
     condition: Mapped[str] = mapped_column(
         String(20),
         nullable = False)
@@ -38,8 +34,6 @@ class LeafCondition(Base):
     # Membuat relasi antara model LeafCondition dengan Predictions
     predictions = relationship("Predictions", back_populates = "leaf_condition")
 
-    # Membuat relasi antara model LeafCondition dengan Models
-    models = relationship("Models", back_populates = "leaf_condition")
     
     
 

@@ -32,6 +32,10 @@ class Models(Base):
     url: Mapped[str] = mapped_column(
         String(255),
         nullable = False)
+    class_model: Mapped[int] = mapped_column(
+        Integer,
+        nullable = False
+    )
     is_active : Mapped[bool] = mapped_column(
         Boolean,
         default = True
@@ -40,5 +44,4 @@ class Models(Base):
     # Membuat relasi antara model Models dan Users
     users = relationship("Users", back_populates = "models")
 
-    # Membuat relasi antara model Models dan LeafCondition
-    leaf_condition = relationship("LeafCondition", back_populates = "models")
+    

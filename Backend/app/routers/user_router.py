@@ -15,7 +15,15 @@ users = APIRouter(
 
 @users.get("/show", status_code = status.HTTP_200_OK)
 async def show_all_users(otoriti: is_admin_depend, db: db_dependency):
-    get_users = await db.execute(select(Users))
-    return get_users.scalars().all()
+    try:
+        if otoriti:
+            get_users = await db.execute(select(Users))
+            return get_users.scalars().all()
+    except Exception as e:
+        print(f"Detail error: {repr(e)}")
+        raise HTTPException(status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail = f"terjadi kesalahan internal")
+
+   
 
 

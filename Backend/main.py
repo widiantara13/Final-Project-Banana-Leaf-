@@ -9,16 +9,19 @@ from app.models.users_model import Users
 from app.routers.auth_routers import auth
 from app.routers.user_router import users
 from app.routers.profiles_router import profile
+from app.routers.log_activity_router import log
 from app.routers.test_router import tes
 from fastapi import HTTPException
 from starlette import status
 from fastapi.staticfiles import StaticFiles
+from fastapi_pagination import add_pagination
 from app.depedencies.user_dependency import ouath_bearer
 from fastapi.openapi.utils import get_openapi
 
 
 app = FastAPI()
 
+add_pagination(app)
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 @app.on_event("startup")
@@ -34,6 +37,7 @@ async def root(token: str = Depends(ouath_bearer)):
 app.include_router(auth)
 app.include_router(users)
 app.include_router(profile)
+app.include_router(log)
 app.include_router(tes)
 
 

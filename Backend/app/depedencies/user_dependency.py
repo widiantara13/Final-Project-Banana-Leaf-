@@ -45,6 +45,7 @@ form_data_dependency = Annotated[OAuth2PasswordRequestForm, Depends()]
 
 async def is_admin(current_user: user_depend):
     if current_user.role != "admin":
+        
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Akses dilarang")
     return current_user

@@ -33,11 +33,21 @@ async def get_profile(current_user: user_depend, db: db_dependency):
         raise HTTPException(status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
                             detail = f"terjadi kesalahan internal")
 
+@profile.get("/show/{id_user}",response_model = Profile, status_code = status.HTTP_200_OK)
+async def get_user_profile(id_user: int, otoriti: is_admin_depend, db: db_dependency):
+    try:
+        if otoriti:
+            user = await db.execute(select(Profiles).where(Profiles.user_id == id_user))
+            return user.scalars().first()
+    except Exception as e:
+        print(f"Detail error: {repr(e)}")
+        raise HTTPException(status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail = f"terjadi kesalahan internal")
+
 @profile.put("/update-image", status_code=status.HTTP_200_OK)
 async def update_image_profile(db:db_dependency, current_user: user_depend, request: Request, file: UploadFile = File(...)):
     prof = await get_profile(current_user, db)
-    if prof.avatar == "app/static/profile_images/default_avatar.jpg": 
-        print(1)       
+    if prof.avatar == "app/static/profile_images/avatar/avatar_img.jpg":               
         image_path = image_saver(file, "profile_images")
     image_delete(prof.avatar)
     image_path = image_saver(file, "profile_images")
@@ -105,7 +115,7 @@ async def delete_profile(db: db_dependency, current_user: user_depend, request: 
     try:
         update_image = update(Profiles).where(Profiles.user_id == current_user.id).values(
             
-            avatar = "app/static/profile_images/default_avatar.jpg"
+            avatar = "app/static/profile_images/avatar/avatar_img.jpg"
         )
         record = Log_Activity_Schema(
                             action = "Hapus Gambar Profile",

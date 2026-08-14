@@ -41,7 +41,7 @@ class Predictions(Base):
         ForeignKey("users.id"),
         nullable = False,
         index = True)
-    leaf_condidition_id : Mapped[int] = mapped_column(
+    leaf_condition_id : Mapped[int] = mapped_column(
         Integer,
         ForeignKey("leaf_condition.id"),
         nullable = False,

@@ -42,7 +42,7 @@ class Profiles(Base):
     avatar : Mapped[str] = mapped_column(
         String(255),
         nullable = True,
-        default = "app/static/profile_images/default_avatar.jpg"
+        default = "app/static/profile_images/avatar/avatar_img.jpg"
     )
     user_id : Mapped[int] = mapped_column(
         BigInteger,

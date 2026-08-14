@@ -13,3 +13,7 @@ Backend/.env
 
 # Static
 Backend/app/static
+
+# Alembic
+Backend/migrations
+Backend/alembic.init
