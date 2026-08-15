@@ -10,6 +10,7 @@ from app.routers.auth_routers import auth
 from app.routers.user_router import users
 from app.routers.profiles_router import profile
 from app.routers.log_activity_router import log
+from app.routers.leaf_condition_router import leafcon
 from app.routers.test_router import tes
 from fastapi import HTTPException
 from starlette import status
@@ -23,6 +24,7 @@ app = FastAPI()
 
 add_pagination(app)
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
+app.mount("/ai", StaticFiles(directory="app/ai"), name="ai")
 
 @app.on_event("startup")
 async def startup():
@@ -38,6 +40,7 @@ app.include_router(auth)
 app.include_router(users)
 app.include_router(profile)
 app.include_router(log)
+app.include_router(leafcon)
 app.include_router(tes)
 
 

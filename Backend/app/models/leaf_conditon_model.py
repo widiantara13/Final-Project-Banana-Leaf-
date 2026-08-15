@@ -19,7 +19,7 @@ class LeafCondition(Base):
         index = True,
         autoincrement = True)    
     condition: Mapped[str] = mapped_column(
-        String(20),
+        String(30),
         nullable = False)
     description: Mapped[str] = mapped_column(
         Text,
