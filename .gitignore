@@ -13,6 +13,9 @@ Backend/.env
 
 # Static
 Backend/app/static
+Backend/app/ai
+# AI
+
 
 # Alembic
 Backend/migrations

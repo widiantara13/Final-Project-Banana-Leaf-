@@ -26,7 +26,7 @@ class Models(Base):
     models_name: Mapped[str] = mapped_column(
         String(50),
         nullable = False)
-    model_type: Mapped[str] = mapped_column(
+    model_type: Mapped[bool] = mapped_column(
         String(10),
         nullable = False)
     url: Mapped[str] = mapped_column(
@@ -38,7 +38,7 @@ class Models(Base):
     )
     is_active : Mapped[bool] = mapped_column(
         Boolean,
-        default = True
+        default = False
     )
 
     # Membuat relasi antara model Models dan Users

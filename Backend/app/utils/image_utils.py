@@ -24,7 +24,9 @@ def image_saver(file, folder_name:str = ''):
         img.close
         return f"app/static/{folder_name}/{image_name}"
     except Exception as e:
-        print(f"Detail error: {repr(e)}")
+        print(f"Detail error: {repr(e)} disini ya")
+
+
 
 def image_delete(img_path: str):
     try:
