@@ -40,9 +40,55 @@ async def get_user_profile(id_user: int, otoriti: is_admin_depend, db: db_depend
             user = await db.execute(select(Profiles).where(Profiles.user_id == id_user))
             return user.scalars().first()
     except Exception as e:
+        raise HTTPException(status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail = "terjadi kesalahan internal")
+
+@profile.get("/detail", status_code = status.HTTP_200_OK)
+async def get_my_detail(current_user: user_depend, db: db_dependency):
+    try:
+        user_prof = await db.execute(select(Profiles).where(Profiles.user_id == current_user.id))
+        prof = user_prof.scalars().first()
+        return {
+            "user_id": current_user.id,
+            "email": current_user.email,
+            "role": current_user.role,
+            "is_active": current_user.is_active,
+            "full_name": prof.full_name if prof else None,
+            "phone_number": prof.phone_number if prof else None,
+            "address": prof.address if prof else None,
+            "avatar": prof.avatar if prof else None,
+        }
+    except Exception as e:
         print(f"Detail error: {repr(e)}")
         raise HTTPException(status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail = f"terjadi kesalahan internal")
+                            detail = "terjadi kesalahan internal")
+
+@profile.get("/detail/{id_user}", status_code = status.HTTP_200_OK)
+async def get_user_detail_by_id(id_user: int, otoriti: is_admin_depend, db: db_dependency):
+    try:
+        if otoriti:
+            get_u = await db.execute(select(Users).where(Users.id == id_user))
+            u = get_u.scalars().first()
+            if not u:
+                raise HTTPException(status_code=404, detail="User tidak ditemukan")
+            user_prof = await db.execute(select(Profiles).where(Profiles.user_id == id_user))
+            prof = user_prof.scalars().first()
+            return {
+                "user_id": u.id,
+                "email": u.email,
+                "role": u.role,
+                "is_active": u.is_active,
+                "full_name": prof.full_name if prof else None,
+                "phone_number": prof.phone_number if prof else None,
+                "address": prof.address if prof else None,
+                "avatar": prof.avatar if prof else None,
+            }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Detail error: {repr(e)}")
+        raise HTTPException(status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail = "terjadi kesalahan internal")
 
 @profile.put("/update-image", status_code=status.HTTP_200_OK)
 async def update_image_profile(db:db_dependency, current_user: user_depend, request: Request, file: UploadFile = File(...)):

@@ -10,7 +10,7 @@ from fastapi import APIRouter, HTTPException, Request, File, UploadFile, Form
 from app.utils.image_utils import image_saver, image_delete
 from sqlalchemy.future import select
 from sqlalchemy import insert, update, delete
-from typing import List
+from typing import List, Optional
 
 
 
@@ -55,7 +55,7 @@ async def show_leaf_condition_detail(current_user: user_depend, db: db_dependenc
             detail="terjadi kesalahan internal"
         )
 
-@leafcon.get("/show", response_model = List[Leaf_Condition], status_code = status.HTTP_200_OK)
+@leafcon.get("/show", response_model = List[Detail_Leaf], status_code = status.HTTP_200_OK)
 async def show_all_cond(current_user: user_depend, db: db_dependency):
     try:
         if current_user:
@@ -131,20 +131,19 @@ async def update_leaf_condition(admin: is_admin_depend,
                                 condition: str = Form(...),
                                 description: str = Form(...),
                                 treatment: str = Form(...),                     
-                                file: UploadFile = File(...)):
+                                file: Optional[UploadFile] = File(None)):
     get_condition = await show_leaf_condition_detail(admin, db, id_leaf)
     try:
-        
-        if file is None:
+        if file and file.filename:
+            image_delete(get_condition.image_reference)
+            image_path = image_saver(file, "condition")
+        else:
             image_path = get_condition.image_reference
-        image_delete(get_condition.image_reference)
-        image_path = image_saver(file, "condition")
         update_con = Update_Leaf(
-            condition = condition or get_condition,
-            description = description or get_condition,
-            treatment = treatment or get_condition,
+            condition = condition or get_condition.condition,
+            description = description or get_condition.description,
+            treatment = treatment or get_condition.treatment,
             image_reference = image_path
-        
         )
         smt = update(LeafCondition).where(LeafCondition.id == id_leaf).values(
             update_con.dict()

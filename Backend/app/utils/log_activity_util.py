@@ -35,6 +35,19 @@ async def record_activity(db: db_dependency, record: Log_Activity_Schema):
     try:
         await db.execute(new_activity)
         await db.commit()
+
+        # Siarkan event live SSE ke dashboard admin yang sedang terhubung
+        try:
+            from app.utils.sse_manager import dashboard_broadcaster
+            await dashboard_broadcaster.broadcast({
+                "type": "NEW_ACTIVITY",
+                "action": record.action,
+                "module": record.module,
+                "email": record.email,
+            })
+        except Exception as sse_err:
+            print(f"[SSE Broadcast Warning]: {repr(sse_err)}")
+
     except Exception as e:
         db.rollback()
         print(f"Detail error: {repr(e)}")

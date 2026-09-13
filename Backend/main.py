@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends
+from contextlib import asynccontextmanager
 from app.database.database import Base, engine
 from app.models.leaf_conditon_model import LeafCondition
 from app.models.log_activity_model import LogActivity
@@ -13,26 +14,47 @@ from app.routers.log_activity_router import log
 from app.routers.leaf_condition_router import leafcon
 from app.routers.model_routers import model
 from app.routers.predictions_router import predic
+from app.routers.dashboard_router import dashboard
 from app.routers.test_router import tes
 from fastapi import HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from starlette import status
 from fastapi.staticfiles import StaticFiles
 from fastapi_pagination import add_pagination
 from app.depedencies.user_dependency import ouath_bearer
 from fastapi.openapi.utils import get_openapi
+from app.utils.models_utils import start_up
 
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Memuat model filter & diseases yang aktif dari database ke memori Keras
+    await start_up()
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
+
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 add_pagination(app)
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
+app.mount("/app/static", StaticFiles(directory="app/static"), name="app_static")
 app.mount("/ai", StaticFiles(directory="app/ai"), name="ai")
-
-# @app.on_event("startup")
-# async def startup():
-    
-#     # async with engine.begin() as mulai:
-#     #     await mulai.run_sync(Base.metadata.create_all)
 
 @app.get("/me")
 async def root(token: str = Depends(ouath_bearer)):
@@ -46,6 +68,7 @@ app.include_router(log)
 app.include_router(leafcon)
 app.include_router(model)
 app.include_router(predic)
+app.include_router(dashboard)
 app.include_router(tes)
 
 

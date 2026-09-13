@@ -1,16 +1,18 @@
 from fastapi import APIRouter, HTTPException, status, Request, File, UploadFile
 from sqlalchemy import insert, delete
-from typing import List
+from typing import List, Optional
 from app.models.predictions_model import Predictions
+from app.models.users_model import Users
 from app.utils.log_activity_util import record_activity, get_browser, get_ip
 from app.schemas.log_activity_schema import Log_Activity_Schema
-from app.schemas.predict_schema import History, DoPredict
+from app.schemas.predict_schema import History, DoPredict, AdminPredictionHistory
 from app.depedencies.db_dependency import db_dependency
 from app.depedencies.user_dependency import is_admin_depend, user_depend
 from app.utils.models_utils import predict
 from app.utils.image_utils import image_saver, image_delete
 from app.models.leaf_conditon_model import LeafCondition
-
+from fastapi_pagination import Page
+from fastapi_pagination.ext.sqlalchemy import paginate
 
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
@@ -24,6 +26,35 @@ predic = APIRouter(
     tags = ["predict"],
     responses = {404: {"description": "not found"}}
 )
+
+@predic.get("/show-all", response_model=Page[AdminPredictionHistory], status_code=status.HTTP_200_OK)
+async def show_all_predictions(
+    admin: is_admin_depend,
+    db: db_dependency,
+    email: Optional[str] = None
+) -> Page[AdminPredictionHistory]:
+    try:
+        if admin:
+            stmt = (
+                select(
+                    Predictions.id,
+                    Predictions.image_path,
+                    Predictions.confidence,
+                    Predictions.created_at,
+                    LeafCondition.condition.label("condition"),
+                    Users.email.label("email")
+                )
+                .join(LeafCondition, Predictions.leaf_condition_id == LeafCondition.id)
+                .join(Users, Predictions.owner_id == Users.id)
+            )
+            if email and email.strip():
+                stmt = stmt.where(Users.email.ilike(f"%{email.strip()}%"))
+            stmt = stmt.order_by(Predictions.created_at.desc())
+            return await paginate(db, stmt)
+    except Exception as e:
+        print(f"Detail error: {repr(e)}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail="terjadi kesalahan internal")
 
 @predic.get("/show", response_model=List[History], status_code=200)
 async def show_predict(user: user_depend, db: db_dependency):
@@ -76,6 +107,30 @@ async def show_predict_detail(user: user_depend, db: db_dependency, id_predict: 
                             detail="terjadi kesalahan internal")
 
 
+@predic.get("/status", status_code=status.HTTP_200_OK)
+async def check_model_readiness(user: user_depend):
+    try:
+        if user:
+            from app.utils.models_utils import model_filter, model_diseases
+            is_ready = (model_filter is not None) and (model_diseases is not None)
+            return {
+                "is_ready": is_ready,
+                "message": (
+                    "Model siap digunakan"
+                    if is_ready
+                    else "Model deteksi belum aktif, mohon tunggu beberapa saat lagi atau hubungi administrator"
+                ),
+                "filter_ready": model_filter is not None,
+                "diseases_ready": model_diseases is not None,
+            }
+    except Exception as e:
+        print(f"Detail error: {repr(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="terjadi kesalahan internal saat memeriksa kesiapan model"
+        )
+
+
 @predic.post("/add", status_code = status.HTTP_201_CREATED)
 async def add_predict(user: user_depend, db: db_dependency,
                       request: Request,file: UploadFile = File(...)):
@@ -89,7 +144,7 @@ async def add_predict(user: user_depend, db: db_dependency,
             smt = insert(Predictions).values(
                 owner_id = user.id,
                 image_path = image_path,
-                leaf_condition_id = pred["index"],                
+                leaf_condition_id = pred["index"]+1,                
                 confidence = pred["confidence"]
             )
             save_pred = await db.execute(smt)
@@ -117,12 +172,15 @@ async def add_predict(user: user_depend, db: db_dependency,
             
             
 
-            return {"detail": "success", "data": result}
+            return {"detail": "success", "data": result, "real":pred["class"]}
+    except HTTPException:
+        await db.rollback()
+        raise
     except Exception as e:
         await db.rollback()
         print(f"Detail error: {repr(e)}")
         raise HTTPException(status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
-                                    detail = f"terjadi kesalahan internal")
+                            detail = "terjadi kesalahan internal saat memproses prediksi")
 
 @predic.delete("/delete/{id_predict}", status_code = status.HTTP_200_OK)
 async def delete_predict(user: user_depend, db: db_dependency, id_predict: int, request: Request):

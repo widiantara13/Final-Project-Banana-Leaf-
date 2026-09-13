@@ -8,14 +8,19 @@ class Log_Individu(BaseModel):
     email: Optional[str]
     action: str
     created_at: datetime
+    model_config = {
+        "from_attributes": True
+    }
 
 class Detail_Log(Log_Individu):
     module: str   
-    
     ip: Optional[str]
     browser: Optional[str]
+    model_config = {
+        "from_attributes": True
+    }
+
 class Log_Activity_Schema(BaseModel):
-    email: Optional[str]
     action: str
     module: str
     user_id: Optional[int]
@@ -24,5 +29,5 @@ class Log_Activity_Schema(BaseModel):
     browser: Optional[str]
     
     model_config = {
-        "from_atributes" : True
+        "from_attributes": True
     }

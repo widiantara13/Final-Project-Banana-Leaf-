@@ -20,3 +20,50 @@ Backend/app/ai
 # Alembic
 Backend/migrations
 Backend/alembic.init
+
+# ==================
+# Frontend (Node / Vite / Turborepo)
+# ==================
+node_modules/
+**/node_modules/
+.turbo/
+**/.turbo/
+dist/
+dist-ssr/
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.tsbuildinfo
+
+# ==================
+# Mobile (Flutter / Dart)
+# ==================
+.dart_tool/
+**/.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+**/build/
+.pub-cache/
+.pub/
+*.lock.bak
+android/.gradle
+android/app/build/
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+ios/Pods/
+ios/.symlinks/
+
+# ==================
+# Editor & OS
+# ==================
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+

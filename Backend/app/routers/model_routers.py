@@ -3,8 +3,23 @@ from app.depedencies.db_dependency import db_dependency
 from app.depedencies.user_dependency import is_admin_depend
 from app.models.models_model import Models
 from app.utils.log_activity_util import record_activity, get_browser, get_ip
-from app.utils.models_utils import upload_model, set_active_all, start_up, update_set_model, set_inactive
 from app.schemas.log_activity_schema import Log_Activity_Schema
+from app.utils.models_utils import (
+    upload_model,
+    set_active_all,
+    start_up,
+    update_set_model,
+    set_inactive,
+    load_model_filter,
+    load_model_diseases,
+    unload_model_filter,
+    unload_model_diseases,
+    resolve_model_path,
+    is_filter_type,
+    is_disease_type,
+    FILTER_TYPES,
+    DISEASE_TYPES,
+)
 from fastapi import APIRouter, Request, status, HTTPException, Form, File, UploadFile
 from sqlalchemy.future import select
 from sqlalchemy import insert, update, delete
@@ -88,17 +103,20 @@ async def get_detail_model(id_model: int, admin: is_admin_depend, db: db_depende
 async def get_active_model(admin: is_admin_depend, db: db_dependency):
     try:
         if admin:
-            get_filter = await db.execute(select(Models).
-                                where((Models.is_active == True) & 
-                                (Models.model_type == False)))
-            get_diseases = await db.execute(select(Models).
-                                where((Models.is_active == True) &
-                                (Models.model_type == True)))
+            get_filter = await db.execute(
+                select(Models).where(
+                    (Models.is_active == True)
+                    & (Models.model_type.in_(["0", "False", "false", "Filter", "filter"]))
+                )
+            )
+            get_diseases = await db.execute(
+                select(Models).where(
+                    (Models.is_active == True)
+                    & (Models.model_type.in_(["1", "True", "true", "Prediksi", "diseases", "dieases"]))
+                )
+            )
             show_filter = get_filter.scalars().first()
             show_diseases = get_diseases.scalars().first()
-            if show_filter is None and show_diseases is None:
-                raise HTTPException(status_code = status.HTTP_404_NOT_FOUND,
-                                    detail = "Model tidak ditemukan")
             return [show_filter, show_diseases]
     except HTTPException:
         raise
@@ -200,54 +218,110 @@ async def set_status_automatic():
 async def set_model(id_model: int, admin: is_admin_depend, db: db_dependency, request: Request):
     try:
         if admin:
-        #Mengambil data model berdasarkan id
+            # 1. Mengambil data model berdasarkan id
             get_model = await get_detail_model(id_model, admin, db)
+            if not get_model:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Model tidak ditemukan")
+
             url = get_model.url
             id_new_model = get_model.id
-            stats = get_model.is_active
             name = get_model.models_name
             type_mod = get_model.model_type
 
-        #mengambil data model yang ingin digantikan
-            get_current_model = await db.execute(select(Models).
-                                where(Models.is_active == True and 
-                                Models.model_type == type_mod))
-            id_current_model = get_current_model.scalars().first().id
+            # Tentukan kelompok tipe model
+            is_filter = is_filter_type(type_mod)
+            target_types = FILTER_TYPES if is_filter else DISEASE_TYPES
 
-        #memperbaharui record data kedua model
-            new_model = update(Models).where(Models.id == id_new_model).values(
-                is_active = True)
-            current_model = update(Models).where(Models.id == id_current_model).values(
-                is_active = False)
-        
-            
-            await db.execute(new_model)
-            await db.execute(current_model)
-            await db.flush()
-            get_active = await get_active_model(admin, db)
-            filter = get_active[0].url
-            diseases = get_active[1].url
-            await update_set_model(filter, diseases)
-        
-        record = Log_Activity_Schema(
-            action = f"Mengaktifkan {name}",
-            module = "model_router",
-            user_id = admin.id,
-            email = admin.email,
-            ip = get_ip(request),
-            browser = get_browser(request)
-        )
-        await record_activity(
-            db,
-            record
-        )
-        await db.commit()
-        return {"message": "success"}
+            # 2. Menonaktifkan model aktif lama yang bertipe sama (aman jika belum ada)
+            await db.execute(
+                update(Models)
+                .where((Models.is_active == True) & (Models.model_type.in_(target_types)))
+                .values(is_active=False)
+            )
+
+            # 3. Mengaktifkan model baru di database
+            await db.execute(
+                update(Models).where(Models.id == id_new_model).values(is_active=True)
+            )
+
+            # 4. Muat model baru ke memori TensorFlow Keras secara independen (hot-swap)
+            resolved_url = resolve_model_path(url)
+            if is_filter:
+                await load_model_filter(resolved_url)
+            else:
+                await load_model_diseases(resolved_url)
+
+            # 5. Catat log aktivitas admin
+            record = Log_Activity_Schema(
+                action=f"Mengaktifkan {name}",
+                module="model_router",
+                user_id=admin.id,
+                email=admin.email,
+                ip=get_ip(request),
+                browser=get_browser(request)
+            )
+            await record_activity(db, record)
+            await db.commit()
+            return {"message": "success", "detail": f"Model {name} berhasil diaktifkan"}
+    except HTTPException:
+        await db.rollback()
+        raise
     except Exception as e:
+        await db.rollback()
         print(f"Detail error: {repr(e)}")
         raise HTTPException(
-                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        detail="terjadi kesalahan internal")
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="terjadi kesalahan internal saat mengaktifkan model"
+        )
+
+
+@model.put("/deactivate/{id_model}", status_code=status.HTTP_200_OK)
+async def deactivate_model(id_model: int, admin: is_admin_depend, db: db_dependency, request: Request):
+    try:
+        if admin:
+            get_model = await get_detail_model(id_model, admin, db)
+            if not get_model:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Model tidak ditemukan")
+
+            name = get_model.models_name
+            type_mod = get_model.model_type
+
+            # Jika model memang sudah tidak aktif
+            if not get_model.is_active:
+                return {"message": "success", "detail": f"Model {name} sudah dalam keadaan nonaktif"}
+
+            # Update status di database menjadi nonaktif
+            await db.execute(
+                update(Models).where(Models.id == id_model).values(is_active=False)
+            )
+
+            # Kosongkan dari memori Keras sesuai tipenya
+            if is_filter_type(type_mod):
+                await unload_model_filter()
+            else:
+                await unload_model_diseases()
+
+            record = Log_Activity_Schema(
+                action=f"Menonaktifkan {name}",
+                module="model_router",
+                user_id=admin.id,
+                email=admin.email,
+                ip=get_ip(request),
+                browser=get_browser(request)
+            )
+            await record_activity(db, record)
+            await db.commit()
+            return {"message": "success", "detail": f"Model {name} berhasil dinonaktifkan"}
+    except HTTPException:
+        await db.rollback()
+        raise
+    except Exception as e:
+        await db.rollback()
+        print(f"Detail error: {repr(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="terjadi kesalahan internal saat menonaktifkan model"
+        )
 
 
 @model.post("/deactivate-all", status_code = status.HTTP_200_OK)
