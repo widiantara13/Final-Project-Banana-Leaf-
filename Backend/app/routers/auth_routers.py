@@ -90,7 +90,7 @@ async def login_user(form_data: form_data_dependency, db: db_dependency, request
     token = Token(
         email = user.email,
         uuid = user.uuid,
-        expire_delta = timedelta(minutes = 30)
+        expire_delta = timedelta(days = 90)  # 3 bulan (90 hari)
     )
     
     access_token = create_access_token(token)

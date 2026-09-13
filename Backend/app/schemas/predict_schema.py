@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Optional
 from datetime import datetime
 
 class History(BaseModel):
@@ -6,6 +7,7 @@ class History(BaseModel):
     image_path: str
     condition: str
     confidence: float
+    created_at: Optional[datetime] = None
 
 class DoPredict(BaseModel):
     owner_id: int

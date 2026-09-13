@@ -65,15 +65,17 @@ async def show_predict(user: user_depend, db: db_dependency):
                     Predictions.id,
                     Predictions.image_path,
                     Predictions.confidence,
+                    Predictions.created_at,
                     LeafCondition.condition.label("condition")  # ambil field dari tabel relasi
                 )
                 .join(LeafCondition, Predictions.leaf_condition_id == LeafCondition.id)
                 .where(Predictions.owner_id == user.id)
+                .order_by(Predictions.created_at.desc())
             )
             result = await db.execute(stmt)
             rows = result.all()
             if not rows:
-                raise HTTPException(status_code=404, detail="data tidak ditemukan")
+                return []
 
             # convert ke dict agar cocok dengan schema History
             return [dict(row._mapping) for row in rows]
@@ -90,7 +92,8 @@ async def show_predict_detail(user: user_depend, db: db_dependency, id_predict: 
             get_predict = await db.execute(select(Predictions.id, 
                                                 Predictions.image_path,
                                                 LeafCondition.condition,
-                                                Predictions.confidence).
+                                                Predictions.confidence,
+                                                Predictions.created_at).
                                                 where(Predictions.id == id_predict).
                                                 join(LeafCondition,
                                                 Predictions.leaf_condition_id == LeafCondition.id))
