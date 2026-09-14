@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { loginUser } from "@/api/auth"
+import { Sprout } from "lucide-react"
 
 export function LoginPage() {
   const navigate = useNavigate()
@@ -39,9 +40,22 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen bg-[#ececec] flex flex-col items-center justify-center p-4 select-none">
-      {/* Top Logo Container */}
-      <div className="mb-8 flex items-center justify-center w-40 h-16 bg-[#636363] text-white font-medium text-lg rounded-lg shadow-sm">
-        Logo
+      {/* Top Logo Badge (Identik dengan versi Mobile) */}
+      <div className="mb-8 flex items-center gap-3.5 bg-white border border-emerald-500/20 rounded-2xl px-5 py-3 shadow-md shadow-emerald-950/5">
+        <div className="w-11 h-11 rounded-xl bg-emerald-100 border border-emerald-500/30 flex items-center justify-center shrink-0">
+          <Sprout className="w-6 h-6 text-emerald-600 stroke-[2.2]" />
+        </div>
+        <div className="flex flex-col text-left">
+          <div className="flex items-center gap-1.5">
+            <span className="font-bold text-neutral-800 text-base tracking-tight">
+              Banana Leaf
+            </span>
+            <span className="w-2 h-2 rounded-full bg-yellow-500 shrink-0" />
+          </div>
+          <span className="text-[11px] text-neutral-500 font-medium tracking-tight">
+            Sistem Deteksi Penyakit
+          </span>
+        </div>
       </div>
 
       {/* Main Login Card */}

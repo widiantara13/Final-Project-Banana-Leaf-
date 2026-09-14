@@ -10,6 +10,7 @@ import {
   Cpu,
   PanelLeftClose,
   PanelLeftOpen,
+  Sprout,
 } from "lucide-react"
 import { useState } from "react"
 import { logoutUser } from "@/api/auth"
@@ -74,13 +75,39 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           </button>
         </div>
 
-        {/* Logo Container */}
+        {/* Logo Badge (Identik dengan versi Mobile) */}
         <div
-          className={`border-2 border-white/80 rounded-md flex items-center justify-center text-white font-semibold shadow-sm transition-all ${
-            collapsed ? "w-12 h-12 text-xs mb-6" : "w-28 h-28 text-lg mb-8"
+          onClick={() => navigate("/")}
+          className={`transition-all cursor-pointer group ${
+            collapsed ? "mb-6" : "w-full mb-8"
           }`}
+          title="Banana Leaf - Sistem Deteksi Penyakit"
         >
-          {collapsed ? "BLD" : "Logo"}
+          {collapsed ? (
+            <div className="w-12 h-12 mx-auto rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-900/40 border border-emerald-500/30 flex items-center justify-center relative shadow-md shadow-emerald-950/40 hover:border-emerald-400/60 hover:scale-105 transition-all">
+              <Sprout className="w-6 h-6 text-emerald-400 stroke-[2.2]" />
+              <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-yellow-400 border-2 border-[#121212]" />
+            </div>
+          ) : (
+            <div className="w-full bg-[#181818] border border-emerald-500/30 rounded-2xl p-3 flex items-center gap-3 shadow-lg shadow-emerald-950/30 hover:border-emerald-500/50 hover:bg-[#1e1e1e] transition-all">
+              {/* Ikon Daun Hijau */}
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-900/50 border border-emerald-500/40 flex items-center justify-center shrink-0 shadow-inner">
+                <Sprout className="w-5 h-5 text-emerald-400 stroke-[2.2]" />
+              </div>
+              {/* Teks Nama & Subtitle */}
+              <div className="flex flex-col text-left overflow-hidden">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-bold text-white text-[14px] tracking-tight whitespace-nowrap">
+                    Banana Leaf
+                  </span>
+                  <span className="w-2 h-2 rounded-full bg-yellow-400 shrink-0 shadow-[0_0_6px_rgba(250,204,21,0.9)] animate-pulse" />
+                </div>
+                <span className="text-[10px] text-neutral-400 font-medium tracking-tight whitespace-nowrap truncate">
+                  Sistem Deteksi Penyakit
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Nav Links */}

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../constants/api_constants.dart';
 import '../../constants/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import 'edit_profile_screen.dart';
@@ -231,12 +232,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                               ],
                             ),
-                            child: const Center(
-                              child: Icon(
-                                Icons.person_rounded,
-                                size: 54,
-                                color: AppColors.primary,
-                              ),
+                            child: ClipOval(
+                              child: (user?.avatar != null &&
+                                      user!.avatar!.isNotEmpty &&
+                                      user.avatar != 'app/static/profile_images/avatar/avatar_img.jpg')
+                                  ? Image.network(
+                                      ApiConstants.getStaticUrl(user.avatar!),
+                                      fit: BoxFit.cover,
+                                      width: 90,
+                                      height: 90,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        return const Center(
+                                          child: Icon(
+                                            Icons.person_rounded,
+                                            size: 54,
+                                            color: AppColors.primary,
+                                          ),
+                                        );
+                                      },
+                                      loadingBuilder: (context, child, loadingProgress) {
+                                        if (loadingProgress == null) return child;
+                                        return const Center(
+                                          child: SizedBox(
+                                            width: 24,
+                                            height: 24,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: AppColors.primary,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    )
+                                  : const Center(
+                                      child: Icon(
+                                        Icons.person_rounded,
+                                        size: 54,
+                                        color: AppColors.primary,
+                                      ),
+                                    ),
                             ),
                           ),
 

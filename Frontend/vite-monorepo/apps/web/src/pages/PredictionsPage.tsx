@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { fetchPredictions, type PredictionItem } from "@/api/predictions"
-import { getAssetUrl } from "@/api/client"
+import { API_BASE_URL } from "@/api/client"
 import { Loader2, Image as ImageIcon, X } from "lucide-react"
 
 export function PredictionsPage() {
@@ -131,26 +131,17 @@ export function PredictionsPage() {
                           <button
                             type="button"
                             onClick={() =>
-                              setPreviewImage(getAssetUrl(p.image_path))
+                              setPreviewImage(`${API_BASE_URL}/${p.image_path}`)
                             }
-                            className="w-14 h-9 rounded-md border border-neutral-600 bg-neutral-900 overflow-hidden flex items-center justify-center hover:scale-105 transition-transform cursor-pointer relative"
+                            className="w-14 h-9 rounded-md border border-neutral-600 bg-neutral-900 overflow-hidden flex items-center justify-center hover:scale-105 transition-transform cursor-pointer"
                             title="Klik untuk memperbesar gambar"
                           >
                             <img
-                              src={getAssetUrl(p.image_path)}
+                              src={`${API_BASE_URL}/${p.image_path}`}
                               alt={p.condition}
                               className="w-full h-full object-cover"
                               onError={(e) => {
-                                const target = e.currentTarget
-                                target.style.display = "none"
-                                const parent = target.parentElement
-                                if (parent && !parent.querySelector(".fallback-icon")) {
-                                  const fallback = document.createElement("div")
-                                  fallback.className =
-                                    "fallback-icon text-[10px] text-neutral-400 flex items-center justify-center w-full h-full"
-                                  fallback.innerText = "No Img"
-                                  parent.appendChild(fallback)
-                                }
+                                ;(e.target as HTMLElement).style.display = "none"
                               }}
                             />
                           </button>

@@ -3,7 +3,7 @@ class ApiConstants {
   /// - Saat memakai kabel USB dengan `adb reverse tcp:8000 tcp:8000`: gunakan 'http://localhost:8000'
   /// - Saat memakai Android Emulator: gunakan 'http://10.0.2.2:8000'
   /// - Saat memakai Wi-Fi LAN: gunakan IP laptop, contoh 'http://192.168.1.xxx:8000'
-  static const String baseUrl = 'http://localhost:8000';
+  static const String baseUrl = 'http://192.168.1.5:8000';
 
   // Auth endpoints
   static const String loginEndpoint = '/auth/login';

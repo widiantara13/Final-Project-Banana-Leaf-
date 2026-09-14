@@ -36,7 +36,6 @@ class BananaLeafApp extends StatelessWidget {
             primary: AppColors.primary,
             secondary: AppColors.bananaYellow,
             surface: AppColors.cardSurface,
-            background: AppColors.background,
           ),
           scaffoldBackgroundColor: AppColors.background,
           textTheme: GoogleFonts.poppinsTextTheme(

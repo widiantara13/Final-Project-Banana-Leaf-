@@ -92,8 +92,7 @@ async def show_predict_detail(user: user_depend, db: db_dependency, id_predict: 
             get_predict = await db.execute(select(Predictions.id, 
                                                 Predictions.image_path,
                                                 LeafCondition.condition,
-                                                Predictions.confidence,
-                                                Predictions.created_at).
+                                                Predictions.confidence).
                                                 where(Predictions.id == id_predict).
                                                 join(LeafCondition,
                                                 Predictions.leaf_condition_id == LeafCondition.id))
@@ -133,7 +132,6 @@ async def check_model_readiness(user: user_depend):
             detail="terjadi kesalahan internal saat memeriksa kesiapan model"
         )
 
-
 @predic.post("/add", status_code = status.HTTP_201_CREATED)
 async def add_predict(user: user_depend, db: db_dependency,
                       request: Request,file: UploadFile = File(...)):
@@ -147,7 +145,7 @@ async def add_predict(user: user_depend, db: db_dependency,
             smt = insert(Predictions).values(
                 owner_id = user.id,
                 image_path = image_path,
-                leaf_condition_id = pred["index"]+1,                
+                leaf_condition_id = pred["index"]+1 ,                
                 confidence = pred["confidence"]
             )
             save_pred = await db.execute(smt)
@@ -183,7 +181,7 @@ async def add_predict(user: user_depend, db: db_dependency,
         await db.rollback()
         print(f"Detail error: {repr(e)}")
         raise HTTPException(status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail = "terjadi kesalahan internal saat memproses prediksi")
+                            detail = "terjadi kesalahan internal")
 
 @predic.delete("/delete/{id_predict}", status_code = status.HTTP_200_OK)
 async def delete_predict(user: user_depend, db: db_dependency, id_predict: int, request: Request):
@@ -193,7 +191,9 @@ async def delete_predict(user: user_depend, db: db_dependency, id_predict: int, 
             if get_predict is None:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                     detail="data tidak ditemukan")
-            await image_delete(get_predict.image_path)
+            img_path = get_predict.get("image_path") if isinstance(get_predict, dict) else getattr(get_predict, "image_path", None)
+            if img_path:
+                image_delete(img_path)
             smt = delete(Predictions).where(Predictions.id == id_predict)
             await db.execute(smt)
             record = Log_Activity_Schema(

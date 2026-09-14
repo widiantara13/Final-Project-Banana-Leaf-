@@ -29,6 +29,14 @@ export interface FullProfile {
   avatar: string | null
 }
 
+export interface UserDetailProfile {
+  id: number
+  full_name: string | null
+  address: string | null
+  phone_number: string | null
+  avatar: string | null
+}
+
 export async function fetchUsers(page = 1, size = 7): Promise<PaginatedUsers> {
   const response = await apiClient.get<PaginatedUsers>(`/users/show?page=${page}&size=${size}`)
   return response.data
@@ -39,3 +47,9 @@ export async function fetchFullProfile(userId?: number): Promise<FullProfile> {
   const response = await apiClient.get<FullProfile>(url)
   return response.data
 }
+
+export async function fetchUserProfile(userId: number): Promise<UserDetailProfile> {
+  const response = await apiClient.get<UserDetailProfile>(`/profile/show/${userId}`)
+  return response.data
+}
+

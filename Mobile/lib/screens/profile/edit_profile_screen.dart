@@ -271,30 +271,54 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                           offset: const Offset(0, 4),
                                         ),
                                       ],
-                                      image: _selectedImageFile != null
-                                          ? DecorationImage(
-                                              image: FileImage(_selectedImageFile!),
-                                              fit: BoxFit.cover,
-                                            )
-                                          : (user?.avatar != null && user!.avatar!.isNotEmpty)
-                                              ? DecorationImage(
-                                                  image: NetworkImage(
-                                                    ApiConstants.getStaticUrl(user.avatar!),
-                                                  ),
-                                                  fit: BoxFit.cover,
-                                                )
-                                              : null,
                                     ),
-                                    child: (_selectedImageFile == null &&
-                                            (user?.avatar == null || user!.avatar!.isEmpty))
-                                        ? const Center(
-                                            child: Icon(
-                                              Icons.person_rounded,
-                                              size: 54,
-                                              color: AppColors.primary,
-                                            ),
-                                          )
-                                        : null,
+                                    child: ClipOval(
+                                      child: _selectedImageFile != null
+                                          ? Image.file(
+                                              _selectedImageFile!,
+                                              fit: BoxFit.cover,
+                                              width: 90,
+                                              height: 90,
+                                            )
+                                          : (user?.avatar != null &&
+                                                  user!.avatar!.isNotEmpty &&
+                                                  user.avatar != 'app/static/profile_images/avatar/avatar_img.jpg')
+                                              ? Image.network(
+                                                  ApiConstants.getStaticUrl(user.avatar!),
+                                                  fit: BoxFit.cover,
+                                                  width: 90,
+                                                  height: 90,
+                                                  errorBuilder: (context, error, stackTrace) {
+                                                    return const Center(
+                                                      child: Icon(
+                                                        Icons.person_rounded,
+                                                        size: 54,
+                                                        color: AppColors.primary,
+                                                      ),
+                                                    );
+                                                  },
+                                                  loadingBuilder: (context, child, loadingProgress) {
+                                                    if (loadingProgress == null) return child;
+                                                    return const Center(
+                                                      child: SizedBox(
+                                                        width: 24,
+                                                        height: 24,
+                                                        child: CircularProgressIndicator(
+                                                          strokeWidth: 2,
+                                                          color: AppColors.primary,
+                                                        ),
+                                                      ),
+                                                    );
+                                                  },
+                                                )
+                                              : const Center(
+                                                  child: Icon(
+                                                    Icons.person_rounded,
+                                                    size: 54,
+                                                    color: AppColors.primary,
+                                                  ),
+                                                ),
+                                    ),
                                   ),
                                   // Badge Ikon Kamera di Kanan Bawah Avatar
                                   Positioned(
