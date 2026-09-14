@@ -53,13 +53,13 @@ export function LogsPage() {
       </h1>
 
       {error && (
-        <div className="w-full max-w-5xl mb-4 p-3 rounded-lg bg-red-500/20 border border-red-500/40 text-red-200 text-sm text-center">
+        <div className="w-full max-w-[1440px] mb-4 p-3 rounded-lg bg-red-500/20 border border-red-500/40 text-red-200 text-sm text-center">
           {error}
         </div>
       )}
 
       {/* Top Filter Container (Email Filter) */}
-      <div className="w-full max-w-5xl mb-4 flex items-center justify-start">
+      <div className="w-full max-w-[1440px] mb-4 flex items-center justify-start">
         <div className="relative">
           <input
             type="text"
@@ -69,13 +69,13 @@ export function LogsPage() {
               setCurrentPage(1) // Reset to page 1 on filter
             }}
             placeholder="Email"
-            className="w-44 px-4 py-2 bg-[#141414] border border-neutral-500/80 rounded-xl text-white placeholder:text-neutral-300 text-sm focus:outline-none focus:border-white transition-colors"
+            className="w-48 px-4 py-2 bg-[#141414] border border-neutral-500/80 rounded-xl text-white placeholder:text-neutral-300 text-sm focus:outline-none focus:border-white transition-colors"
           />
         </div>
       </div>
 
       {/* Main Table Card */}
-      <div className="w-full max-w-5xl bg-[#141414] border border-neutral-600/80 rounded-xl shadow-2xl overflow-x-auto">
+      <div className="w-full max-w-[1440px] bg-[#141414] border border-neutral-600/80 rounded-xl shadow-2xl overflow-x-auto">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-16 text-neutral-400">
             <Loader2 className="w-8 h-8 animate-spin mb-3 text-neutral-300" />
@@ -86,28 +86,28 @@ export function LogsPage() {
             Tidak ada riwayat aktivitas yang ditemukan.
           </div>
         ) : (
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-collapse min-w-[950px]">
             <thead>
               <tr className="border-b border-neutral-700 bg-[#161616] text-neutral-200 text-sm font-semibold">
-                <th className="py-3.5 px-3 text-center border-r border-neutral-700 w-12">
+                <th className="py-3.5 px-3 text-center border-r border-neutral-700 w-14">
                   No
                 </th>
-                <th className="py-3.5 px-4 border-r border-neutral-700 text-center">
+                <th className="py-3.5 px-4 border-r border-neutral-700 text-center min-w-[150px]">
                   action
                 </th>
-                <th className="py-3.5 px-4 border-r border-neutral-700 text-center">
+                <th className="py-3.5 px-4 border-r border-neutral-700 text-center min-w-[130px]">
                   module
                 </th>
-                <th className="py-3.5 px-4 border-r border-neutral-700 text-center">
+                <th className="py-3.5 px-4 border-r border-neutral-700 text-center min-w-[160px]">
                   email
                 </th>
-                <th className="py-3.5 px-3 border-r border-neutral-700 text-center">
+                <th className="py-3.5 px-3 border-r border-neutral-700 text-center min-w-[110px]">
                   ip
                 </th>
-                <th className="py-3.5 px-4 border-r border-neutral-700 text-center">
+                <th className="py-3.5 px-4 border-r border-neutral-700 text-center min-w-[320px]">
                   browser
                 </th>
-                <th className="py-3.5 px-4 text-center">created</th>
+                <th className="py-3.5 px-4 text-center min-w-[150px]">created</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-700 text-xs sm:text-sm text-neutral-200">
@@ -133,7 +133,7 @@ export function LogsPage() {
                     <td className="py-3.5 px-3 border-r border-neutral-700 text-center font-mono text-xs text-neutral-400">
                       {log.ip || "-"}
                     </td>
-                    <td className="py-3.5 px-4 border-r border-neutral-700 text-center text-xs text-neutral-300 max-w-[200px] truncate" title={log.browser || ""}>
+                    <td className="py-3.5 px-4 border-r border-neutral-700 text-center text-xs text-neutral-300 break-words leading-relaxed max-w-[500px]">
                       {log.browser || "-"}
                     </td>
                     <td className="py-3.5 px-4 text-center font-mono text-xs text-neutral-400 whitespace-nowrap">

@@ -12,8 +12,10 @@ import {
   PanelLeftOpen,
   Sprout,
 } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { logoutUser } from "@/api/auth"
+import { getAssetUrl } from "@/api/client"
+import { fetchFullProfile, type FullProfile } from "@/api/users"
 
 interface NavItem {
   title: string
@@ -38,10 +40,41 @@ interface SidebarProps {
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const navigate = useNavigate()
   const [showProfileMenu, setShowProfileMenu] = useState(false)
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [currentUser, setCurrentUser] = useState<FullProfile | null>(null)
+  const [imgError, setImgError] = useState(false)
 
-  const handleLogout = async () => {
-    await logoutUser()
-    navigate("/login")
+  useEffect(() => {
+    let isMounted = true
+    const loadCurrentUser = async () => {
+      try {
+        const data = await fetchFullProfile()
+        if (isMounted) {
+          setCurrentUser(data)
+        }
+      } catch (err) {
+        console.error("Gagal memuat profil admin di sidebar:", err)
+      }
+    }
+    loadCurrentUser()
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  const handleConfirmLogout = async () => {
+    try {
+      setIsLoggingOut(true)
+      await logoutUser()
+      navigate("/login")
+    } catch (err) {
+      console.error("Logout error:", err)
+      navigate("/login")
+    } finally {
+      setIsLoggingOut(false)
+      setShowLogoutModal(false)
+    }
   }
 
   return (
@@ -150,19 +183,33 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
               collapsed ? "left-16" : ""
             }`}
           >
+            {currentUser && (
+              <div className="px-3 py-2 border-b border-neutral-700/80 mb-1 text-left">
+                <p className="font-semibold text-white text-xs truncate">
+                  {currentUser.full_name || "Admin"}
+                </p>
+                <p className="text-[11px] text-neutral-400 truncate">
+                  {currentUser.email}
+                </p>
+              </div>
+            )}
             <button
               onClick={() => {
                 setShowProfileMenu(false)
                 navigate("/profile")
               }}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-800 transition-colors text-left cursor-pointer"
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-800 transition-colors text-left cursor-pointer text-xs sm:text-sm"
             >
-              <User className="w-4 h-4" />
+              <User className="w-4 h-4 text-neutral-300" />
               <span>Profil Admin</span>
             </button>
             <button
-              onClick={handleLogout}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-red-500/20 text-red-300 transition-colors text-left cursor-pointer"
+              type="button"
+              onClick={() => {
+                setShowProfileMenu(false)
+                setShowLogoutModal(true)
+              }}
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-red-500/20 text-red-300 transition-colors text-left cursor-pointer text-xs sm:text-sm"
             >
               <LogOut className="w-4 h-4" />
               <span>Keluar (Logout)</span>
@@ -173,18 +220,69 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         <button
           type="button"
           onClick={() => setShowProfileMenu(!showProfileMenu)}
-          className={`rounded-full bg-white flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer border-2 border-transparent hover:border-neutral-300 ${
-            collapsed ? "w-11 h-11" : "w-16 h-16"
+          className={`rounded-full overflow-hidden shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer border-2 border-white/60 hover:border-white bg-neutral-900 flex items-center justify-center relative ${
+            collapsed ? "w-11 h-11" : "w-14 h-14"
           }`}
-          title="Menu Profil"
+          title={currentUser?.full_name ? `${currentUser.full_name} (Menu Profil)` : "Menu Profil"}
         >
-          <User
-            className={`text-neutral-900 stroke-[2.2] ${
-              collapsed ? "w-6 h-6" : "w-9 h-9"
-            }`}
-          />
+          {currentUser?.avatar &&
+          currentUser.avatar !== "app/static/profile_images/avatar/avatar_img.jpg" &&
+          !imgError ? (
+            <img
+              src={getAssetUrl(currentUser.avatar)}
+              alt="Foto Profil Admin"
+              className="w-full h-full object-cover"
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            <div className="w-full h-full rounded-full bg-white flex items-center justify-center">
+              <User
+                className={`text-neutral-900 stroke-[2.2] ${
+                  collapsed ? "w-6 h-6" : "w-8 h-8"
+                }`}
+              />
+            </div>
+          )}
         </button>
       </div>
+
+      {/* Modal Pop-up Konfirmasi Logout (Sesuai Desain Wireframe) */}
+      {showLogoutModal && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/75 backdrop-blur-[2px] p-4 animate-in fade-in duration-200"
+          onClick={() => !isLoggingOut && setShowLogoutModal(false)}
+        >
+          <div
+            className="w-full max-w-[420px] bg-[#0c0c0c] border border-white/80 rounded-[1.8rem] shadow-2xl px-8 py-8 sm:py-10 flex flex-col items-center text-center animate-in zoom-in-95 duration-150 select-none"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Teks Konfirmasi */}
+            <h3 className="text-white text-base sm:text-[17px] font-medium tracking-wide mb-8">
+              Apakah anda yakin untuk Log out?
+            </h3>
+
+            {/* Tombol Aksi: Yakin & Batalkan */}
+            <div className="flex items-center justify-center gap-5 w-full">
+              <button
+                type="button"
+                disabled={isLoggingOut}
+                onClick={handleConfirmLogout}
+                className="min-w-[105px] py-2 px-6 rounded-xl border border-white bg-transparent text-white text-sm font-medium hover:bg-white hover:text-black active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+              >
+                {isLoggingOut ? "..." : "Yakin"}
+              </button>
+              <button
+                type="button"
+                disabled={isLoggingOut}
+                onClick={() => setShowLogoutModal(false)}
+                className="min-w-[105px] py-2 px-6 rounded-xl border border-white bg-transparent text-white text-sm font-medium hover:bg-white hover:text-black active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+              >
+                Batalkan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   )
 }

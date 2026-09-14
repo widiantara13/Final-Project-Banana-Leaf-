@@ -11,14 +11,35 @@ import os
 def get_ip(request: Request):
     return request.client.host
 
-def get_browser(request: Request):
-    user_agent = parse(request.headers["User-Agent"])
-    user_browser = user_agent.browser.family
-    user_browser_version = user_agent.browser.version_string
-    user_os = user_agent.os.family
-    is_mobile = user_agent.is_mobile
-    device: bool = "Mobile" if is_mobile else "Desktop"
-    return f"{user_browser}/{user_browser_version}/{user_os}/{device}"
+def get_browser(request: Request) -> str:
+    raw_ua = request.headers.get("User-Agent", "").strip()
+    if not raw_ua:
+        return "Unknown/1.0/Unknown/Desktop"
+
+    # Deteksi jika request berasal dari Aplikasi Mobile BananaLeaf
+    if "BananaLeaf-Mobile" in raw_ua:
+        os_name = "Android" if "Android" in raw_ua else ("iOS" if "iOS" in raw_ua else "Mobile")
+        return f"BananaLeaf-App/1.0/{os_name}/Mobile"
+
+    # Fallback jika aplikasi Flutter mengirim User-Agent default bawaan Dart
+    if "Dart/" in raw_ua:
+        return "BananaLeaf-App/Flutter/Android/Mobile"
+
+    # Parsing untuk Web Browser standar (Chrome, Firefox, Safari, Edge, dll.)
+    try:
+        user_agent = parse(raw_ua)
+        user_browser = user_agent.browser.family
+        user_browser_version = user_agent.browser.version_string or "1.0"
+        user_os = user_agent.os.family
+        is_mobile = user_agent.is_mobile or "Mobile" in raw_ua
+        device = "Mobile" if is_mobile else "Desktop"
+
+        if user_browser == "Other" and is_mobile:
+            user_browser = "Mobile App"
+
+        return f"{user_browser}/{user_browser_version}/{user_os}/{device}"
+    except Exception:
+        return "Browser/1.0/Other/Desktop"
 
 
 async def record_activity(db: db_dependency, record: Log_Activity_Schema):

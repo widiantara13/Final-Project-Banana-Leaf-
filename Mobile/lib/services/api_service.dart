@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
 import '../constants/api_constants.dart';
 import '../models/user_model.dart';
@@ -8,6 +9,10 @@ class ApiService {
   late final Dio _dio;
 
   ApiService() {
+    final platformName = Platform.isAndroid
+        ? 'Android'
+        : (Platform.isIOS ? 'iOS' : 'Mobile');
+
     _dio = Dio(
       BaseOptions(
         baseUrl: ApiConstants.baseUrl,
@@ -15,6 +20,7 @@ class ApiService {
         receiveTimeout: const Duration(seconds: 20),
         headers: {
           'Accept': 'application/json',
+          'User-Agent': 'BananaLeaf-Mobile/1.0 ($platformName; Mobile)',
         },
       ),
     );
