@@ -139,7 +139,19 @@ async def add_predict(user: user_depend, db: db_dependency,
        if user:
             pred  = await predict(file)
             if pred["class"] == "random":
-                return{"detail":f"Gambar yang anda inputkan bukan daun pisang, dengan presentase{pred['confidence']}"}
+                record = Log_Activity_Schema(
+                    action = f"Membuat prediksi dengan hasil bukan daun pisang dan confidence {pred['confidence']}",
+                    module = "predictions_router",
+                    user_id = user.id,
+                    email = user.email,
+                    ip = get_ip(request),
+                    browser = get_browser(request)
+                )
+                await record_activity(
+                    db,
+                    record
+                )
+                return {"detail": f"Gambar yang anda inputkan bukan daun pisang, dengan persentase {pred['confidence']}"}
             image_path =image_saver(file, "predict")
             
             smt = insert(Predictions).values(
